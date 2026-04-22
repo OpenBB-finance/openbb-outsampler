@@ -8,7 +8,7 @@
 Start the server with:
 
 ```sh
-python outsampler.py
+openbb-api --app outsampler.py --port 6775
 ```
 
 
