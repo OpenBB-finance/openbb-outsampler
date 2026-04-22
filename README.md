@@ -1,4 +1,18 @@
-# Outsampler API — OpenBB Integration Guide
+## Installation
+
+- Create a Python environment >=3.11
+- Run `pip install .`
+
+## Launch
+
+Start the server with:
+
+```sh
+python outsampler.py
+```
+
+
+### Outsampler API — OpenBB Integration Guide
 
 Outsampler is an AI-powered market intelligence platform that monitors news, press releases, and SEC filings for tracked assets, scores them for materiality, and surfaces the most relevant signals to investors.
 
@@ -9,7 +23,7 @@ Outsampler is an AI-powered market intelligence platform that monitors news, pre
 </tr>
 </table>
 
-## How It Works
+### How It Works
 
 Outsampler monitors a watchlist of assets and continuously processes incoming information from multiple sources:
 
@@ -22,7 +36,7 @@ Each piece of content is passed through a two-stage AI scoring pipeline that eva
 Intelligence briefs are AI-generated narrative summaries of the day's material activity for each tracked asset, produced once daily at 04:00 AM UTC. All data is scoped to your watchlist — you only see alerts for assets you track.
 
 
-## Base URL
+### Base URL
 
 ```
 https://app.outsampler.com
@@ -30,7 +44,7 @@ https://app.outsampler.com
 
 ---
 
-## Authentication
+### Authentication
 
 All endpoints require an API key passed as a request header:
 
@@ -42,7 +56,7 @@ To request an API key, contact **info@outsampler.com**
 
 ---
 
-## Severity Scale
+### Severity Scale
 
 | Indicator | Label | Score | Meaning |
 |-----------|-------|-------|---------|
