@@ -1,0 +1,272 @@
+{
+    "outsampler_info_custom_obb": {
+        "name": "Outsampler Intelligence",
+        "description": "Outsampler is a market intelligence platform that monitors news, press releases, and SEC filings across a watchlist of assets.\nIt scores each item for materiality using a multi-stage AI pipeline, and surfaces the signals that matter — filtered, ranked, and ready to act on.\nThis integration brings Outsampler's intelligence directly into OpenBB Workspace as a set of interactive widgets.",
+        "category": "Outsampler",
+        "type": "markdown",
+        "widgetId": "outsampler_info_custom_obb",
+        "mcp_tool": {},
+        "params": [],
+        "endpoint": "/outsampler_info",
+        "runButton": false,
+        "gridData": {
+            "w": 40,
+            "h": 15
+        },
+        "data": {
+            "dataKey": "",
+            "table": {
+                "showAll": true
+            }
+        },
+        "source": [
+            "Outsampler"
+        ]
+    },
+    "outsampler_watchlist_custom_obb": {
+        "name": "Outsampler Watchlist",
+        "description": "All assets currently on your Outsampler, tracked watchlist.",
+        "category": "Outsampler",
+        "type": "table",
+        "widgetId": "outsampler_watchlist_custom_obb",
+        "mcp_tool": {},
+        "params": [
+            {
+                "label": "Ticker",
+                "description": "The ticker symbol of the asset, e.g. 'AAPL' for Apple Inc.",
+                "optional": true,
+                "type": "text",
+                "value": "",
+                "show": false,
+                "paramName": "ticker"
+            }
+        ],
+        "endpoint": "/outsampler_watchlist",
+        "runButton": false,
+        "gridData": {
+            "w": 40,
+            "h": 10
+        },
+        "data": {
+            "dataKey": "",
+            "table": {
+                "showAll": true,
+                "columnsDefs": [
+                    {
+                        "field": "ticker",
+                        "formatterFn": null,
+                        "headerName": "Ticker",
+                        "headerTooltip": "The ticker symbol of the asset, e.g. 'AAPL' for Apple Inc.",
+                        "cellDataType": "text",
+                        "renderFn": "cellOnClick",
+                        "renderFnParams": {
+                            "actionType": "groupBy",
+                            "groupBy": {
+                                "paramName": "ticker"
+                            }
+                        }
+                    },
+                    {
+                        "field": "name",
+                        "formatterFn": null,
+                        "headerName": "Name",
+                        "headerTooltip": "The full name of the asset, e.g. 'Apple Inc.'",
+                        "cellDataType": "text"
+                    },
+                    {
+                        "field": "type",
+                        "formatterFn": null,
+                        "headerName": "Type",
+                        "headerTooltip": "The type of the asset, one of: 'public', 'private', 'commoidity'",
+                        "cellDataType": "text"
+                    },
+                    {
+                        "field": "sector",
+                        "formatterFn": null,
+                        "headerName": "Sector",
+                        "headerTooltip": "The sector of the asset, e.g. 'Technology'",
+                        "cellDataType": "text"
+                    },
+                    {
+                        "field": "industry",
+                        "formatterFn": null,
+                        "headerName": "Industry",
+                        "headerTooltip": "The industry classification of the asset, e.g. 'Consumer Electronics'",
+                        "cellDataType": "text"
+                    }
+                ],
+                "enableAdvanced": true
+            }
+        },
+        "source": [
+            "Outsampler"
+        ]
+    },
+    "outsampler_alerts_custom_obb": {
+        "name": "Outsampler Alerts",
+        "description": "Scored, non-suppressed alerts for a ticker on a given date, formatted as a newsfeed and sorted by severity (CRITICAL → WATCH → INFO)",
+        "category": "Outsampler",
+        "type": "newsfeed",
+        "widgetId": "outsampler_alerts_custom_obb",
+        "mcp_tool": {},
+        "params": [
+            {
+                "label": "Ticker",
+                "description": "The ticker symbol of the asset, e.g. 'AAPL' for Apple Inc.",
+                "optional": false,
+                "type": "text",
+                "value": null,
+                "show": true,
+                "paramName": "ticker"
+            },
+            {
+                "label": "Date",
+                "description": "The date for which to retrieve data.",
+                "optional": false,
+                "type": "date",
+                "value": "$currentDate-1d",
+                "show": true,
+                "paramName": "date"
+            }
+        ],
+        "endpoint": "/outsampler_alerts",
+        "runButton": false,
+        "gridData": {
+            "w": 40,
+            "h": 15
+        },
+        "data": {
+            "dataKey": "",
+            "table": {
+                "showAll": true,
+                "columnsDefs": [
+                    {
+                        "field": "title",
+                        "formatterFn": null,
+                        "headerName": "Title",
+                        "headerTooltip": "The headline of the news item.",
+                        "cellDataType": "text"
+                    },
+                    {
+                        "field": "date",
+                        "pinned": "left",
+                        "formatterFn": null,
+                        "headerName": "Date",
+                        "headerTooltip": "The publication date of the news item.",
+                        "cellDataType": "text"
+                    },
+                    {
+                        "field": "author",
+                        "formatterFn": null,
+                        "headerName": "Author",
+                        "headerTooltip": "The author of the news item.",
+                        "cellDataType": "text"
+                    },
+                    {
+                        "field": "excerpt",
+                        "formatterFn": null,
+                        "headerName": "Excerpt",
+                        "headerTooltip": "A short excerpt from the news item.",
+                        "cellDataType": "text"
+                    },
+                    {
+                        "field": "body",
+                        "formatterFn": null,
+                        "headerName": "Body",
+                        "headerTooltip": "The full body of the news item.",
+                        "cellDataType": "text"
+                    }
+                ]
+            }
+        },
+        "source": [
+            "Outsampler"
+        ]
+    },
+    "outsampler_summary_custom_obb": {
+        "name": "Asset Summary",
+        "description": "AI-generated daily intelligence brief as plain text markdown, with a severity indicator based on the day's highest-scoring alert.",
+        "category": "Outsampler",
+        "type": "markdown",
+        "widgetId": "outsampler_summary_custom_obb",
+        "mcp_tool": {},
+        "params": [
+            {
+                "label": "Ticker",
+                "description": "The ticker symbol of the asset, e.g. 'AAPL' for Apple Inc.",
+                "optional": false,
+                "type": "text",
+                "value": null,
+                "show": true,
+                "paramName": "ticker"
+            },
+            {
+                "label": "Date",
+                "description": "The date for which to retrieve data.",
+                "optional": false,
+                "type": "date",
+                "value": "$currentDate-1d",
+                "show": true,
+                "paramName": "date"
+            }
+        ],
+        "endpoint": "/outsampler_summary",
+        "runButton": false,
+        "gridData": {
+            "w": 40,
+            "h": 15
+        },
+        "data": {
+            "dataKey": "",
+            "table": {
+                "showAll": true
+            }
+        },
+        "source": [
+            "Outsampler"
+        ]
+    },
+    "outsampler_brief_custom_obb": {
+        "name": "Asset Intelligence",
+        "description": "A combined markdown snapshot of the intelligence brief, key driver relationships, and top WATCH/CRITICAL alerts for a ticker on a given date.",
+        "category": "Outsampler",
+        "type": "markdown",
+        "widgetId": "outsampler_brief_custom_obb",
+        "mcp_tool": {},
+        "params": [
+            {
+                "label": "Ticker",
+                "description": "The ticker symbol of the asset, e.g. 'AAPL' for Apple Inc.",
+                "optional": false,
+                "type": "text",
+                "value": null,
+                "show": true,
+                "paramName": "ticker"
+            },
+            {
+                "label": "Date",
+                "description": "The date for which to retrieve data.",
+                "optional": false,
+                "type": "date",
+                "value": "$currentDate-1d",
+                "show": true,
+                "paramName": "date"
+            }
+        ],
+        "endpoint": "/outsampler_brief",
+        "runButton": false,
+        "gridData": {
+            "w": 40,
+            "h": 15
+        },
+        "data": {
+            "dataKey": "",
+            "table": {
+                "showAll": true
+            }
+        },
+        "source": [
+            "Outsampler"
+        ]
+    }
+}

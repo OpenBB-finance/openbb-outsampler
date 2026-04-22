@@ -1,0 +1,117 @@
+[
+    {
+        "name": "Outsampler Intelligence",
+        "img": "https://static.thenounproject.com/png/5202277-200.png",
+        "img_dark": "https://static.thenounproject.com/png/5202277-200.png",
+        "img_light": "https://static.thenounproject.com/png/5202277-200.png",
+        "description": "Outsampler is an AI-powered market intelligence platform that monitors news, press releases, and SEC filings for tracked assets, scores them for materiality, and surfaces the most relevant signals to investors.",
+        "allowCustomization": true,
+        "tabs": {
+            "overview": {
+                "id": "overview",
+                "name": "overview",
+                "layout": [
+                    {
+                        "i": "outsampler_info_custom_obb",
+                        "x": 0,
+                        "y": 0,
+                        "w": 40,
+                        "h": 5,
+                        "groups": []
+                    },
+                    {
+                        "i": "outsampler_watchlist_custom_obb",
+                        "x": 0,
+                        "y": 5,
+                        "w": 40,
+                        "h": 8,
+                        "state": {
+                            "chartView": {
+                                "enabled": false,
+                                "chartType": "line"
+                            },
+                            "columnState": {
+                                "default": {
+                                    "columnOrder": {
+                                        "orderedColIds": [
+                                            "ticker",
+                                            "name",
+                                            "sector",
+                                            "industry",
+                                            "type"
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        "groups": [
+                            "Group 1"
+                        ]
+                    },
+                    {
+                        "i": "outsampler_summary_custom_obb",
+                        "x": 0,
+                        "y": 13,
+                        "w": 40,
+                        "h": 8,
+                        "state": {
+                            "params": {
+                                "ticker": "ORCL"
+                            }
+                        },
+                        "groups": [
+                            "Group 1",
+                            "Group 2"
+                        ]
+                    },
+                    {
+                        "i": "outsampler_alerts_custom_obb",
+                        "x": 0,
+                        "y": 21,
+                        "w": 40,
+                        "h": 4,
+                        "state": {
+                            "params": {
+                                "ticker": "ORCL"
+                            }
+                        },
+                        "groups": [
+                            "Group 1",
+                            "Group 2"
+                        ]
+                    },
+                    {
+                        "i": "outsampler_brief_custom_obb",
+                        "x": 0,
+                        "y": 25,
+                        "w": 40,
+                        "h": 20,
+                        "state": {
+                            "params": {
+                                "ticker": "ORCL"
+                            }
+                        },
+                        "groups": [
+                            "Group 1",
+                            "Group 2"
+                        ]
+                    }
+                ]
+            }
+        },
+        "groups": [
+            {
+                "name": "Group 1",
+                "type": "param",
+                "paramName": "ticker",
+                "defaultValue": "ORCL"
+            },
+            {
+                "name": "Group 2",
+                "type": "param",
+                "paramName": "date",
+                "defaultValue": "$currentDate-1d"
+            }
+        ]
+    }
+]

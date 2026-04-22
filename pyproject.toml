@@ -1,0 +1,9 @@
+[project]
+name = "outsampler-openbb"
+version = "0.1.0"
+description = "Outsampler API integration for OpenBB Workspace."
+requires-python = ">=3.11"
+dependencies = [
+    "httpx",
+    "openbb-platform-api",
+]
