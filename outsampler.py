@@ -269,9 +269,3 @@ async def outsampler_brief(
         data = resp.read().decode("utf-8")
 
     return data
-
-
-if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run(app, host="0.0.0.0", port=6775)
