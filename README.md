@@ -2,7 +2,12 @@
 
 Outsampler is an AI-powered market intelligence platform that monitors news, press releases, and SEC filings for tracked assets, scores them for materiality, and surfaces the most relevant signals to investors.
 
----
+<table>
+<tr>
+<td><img width="302" alt="Screenshot 2026-04-21 at 10 33 24 PM" src="https://github.com/user-attachments/assets/8dcb915b-2191-4e0e-ac9b-003af332d0f3" /></td>
+<td><img width="1282" alt="Screenshot 2026-04-21 at 11 21 43 PM" src="https://github.com/user-attachments/assets/0650017c-a852-440d-ad62-634f00921bec" /></td>
+</tr>
+</table>
 
 ## How It Works
 
@@ -16,7 +21,6 @@ Each piece of content is passed through a two-stage AI scoring pipeline that eva
 
 Intelligence briefs are AI-generated narrative summaries of the day's material activity for each tracked asset, produced once daily at 04:00 AM UTC. All data is scoped to your watchlist — you only see alerts for assets you track.
 
----
 
 ## Base URL
 
