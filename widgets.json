@@ -226,6 +226,283 @@
             "Outsampler"
         ]
     },
+    "outsampler_portfolio_kpis_custom_obb": {
+        "name": "Portfolio KPIs",
+        "description": "Header-strip KPI metrics for a given date — total tracked assets, severity bucket counts (Critical / Watch / Info), and the highest single-asset score with the leading ticker.",
+        "category": "Outsampler",
+        "type": "metric",
+        "widgetId": "outsampler_portfolio_kpis_custom_obb",
+        "mcp_tool": {},
+        "params": [
+            {
+                "label": "Date",
+                "description": "The date for which to compute portfolio KPIs.",
+                "optional": false,
+                "type": "date",
+                "value": "$currentDate-1d",
+                "show": true,
+                "paramName": "date"
+            }
+        ],
+        "endpoint": "/outsampler_portfolio_kpis",
+        "runButton": false,
+        "gridData": {
+            "w": 40,
+            "h": 5
+        },
+        "data": {
+            "dataKey": ""
+        },
+        "source": [
+            "Outsampler"
+        ]
+    },
+    "outsampler_severity_distribution_custom_obb": {
+        "name": "Severity Distribution",
+        "description": "Count of watchlist assets in each severity bucket (Critical / Watch / Info / Quiet) for a given date. Best rendered as a bar chart via the chart view.",
+        "category": "Outsampler",
+        "type": "table",
+        "widgetId": "outsampler_severity_distribution_custom_obb",
+        "mcp_tool": {},
+        "params": [
+            {
+                "label": "Date",
+                "description": "The date for which to compute the severity distribution.",
+                "optional": false,
+                "type": "date",
+                "value": "$currentDate-1d",
+                "show": true,
+                "paramName": "date"
+            }
+        ],
+        "endpoint": "/outsampler_severity_distribution",
+        "runButton": false,
+        "gridData": {
+            "w": 20,
+            "h": 12
+        },
+        "data": {
+            "dataKey": "",
+            "table": {
+                "showAll": true,
+                "columnsDefs": [
+                    {
+                        "field": "severity",
+                        "headerName": "Severity",
+                        "headerTooltip": "Severity bucket.",
+                        "cellDataType": "text"
+                    },
+                    {
+                        "field": "count",
+                        "headerName": "Assets",
+                        "headerTooltip": "Number of assets in this bucket.",
+                        "cellDataType": "number",
+                        "formatterFn": "int"
+                    }
+                ]
+            }
+        },
+        "source": [
+            "Outsampler"
+        ]
+    },
+    "outsampler_source_mix_custom_obb": {
+        "name": "Source Mix",
+        "description": "Count of alerts grouped by source provider (BENZINGA NEWS, BENZINGA PR, SEC, etc.) across the entire watchlist for a given date. Best rendered as a donut chart via the chart view.",
+        "category": "Outsampler",
+        "type": "table",
+        "widgetId": "outsampler_source_mix_custom_obb",
+        "mcp_tool": {},
+        "params": [
+            {
+                "label": "Date",
+                "description": "The date for which to compute the source mix.",
+                "optional": false,
+                "type": "date",
+                "value": "$currentDate-1d",
+                "show": true,
+                "paramName": "date"
+            }
+        ],
+        "endpoint": "/outsampler_source_mix",
+        "runButton": false,
+        "gridData": {
+            "w": 20,
+            "h": 12
+        },
+        "data": {
+            "dataKey": "",
+            "table": {
+                "showAll": true,
+                "columnsDefs": [
+                    {
+                        "field": "source",
+                        "headerName": "Source",
+                        "headerTooltip": "Source provider.",
+                        "cellDataType": "text"
+                    },
+                    {
+                        "field": "count",
+                        "headerName": "Alerts",
+                        "headerTooltip": "Number of alerts from this source.",
+                        "cellDataType": "number",
+                        "formatterFn": "int"
+                    }
+                ]
+            }
+        },
+        "source": [
+            "Outsampler"
+        ]
+    },
+    "outsampler_portfolio_snapshot_custom_obb": {
+        "name": "Portfolio Severity Snapshot",
+        "description": "Cross-section severity snapshot across the entire watchlist for a given date. Mirrors the Outsampler Daily Summaries page — one row per tracked asset, sorted by score descending.",
+        "category": "Outsampler",
+        "type": "table",
+        "widgetId": "outsampler_portfolio_snapshot_custom_obb",
+        "mcp_tool": {},
+        "params": [
+            {
+                "label": "Date",
+                "description": "The date for which to retrieve the portfolio snapshot.",
+                "optional": false,
+                "type": "date",
+                "value": "$currentDate-1d",
+                "show": true,
+                "paramName": "date"
+            }
+        ],
+        "endpoint": "/outsampler_portfolio_snapshot",
+        "runButton": false,
+        "gridData": {
+            "w": 40,
+            "h": 12
+        },
+        "data": {
+            "dataKey": "",
+            "table": {
+                "showAll": true,
+                "enableAdvanced": true,
+                "columnsDefs": [
+                    {
+                        "field": "ticker",
+                        "headerName": "Ticker",
+                        "headerTooltip": "Ticker symbol.",
+                        "cellDataType": "text",
+                        "renderFn": "cellOnClick",
+                        "renderFnParams": {
+                            "actionType": "groupBy",
+                            "groupBy": {
+                                "paramName": "ticker"
+                            }
+                        }
+                    },
+                    {
+                        "field": "name",
+                        "headerName": "Name",
+                        "headerTooltip": "Asset name.",
+                        "cellDataType": "text"
+                    },
+                    {
+                        "field": "sector",
+                        "headerName": "Sector",
+                        "headerTooltip": "Sector classification.",
+                        "cellDataType": "text"
+                    },
+                    {
+                        "field": "severity",
+                        "headerName": "Severity",
+                        "headerTooltip": "Severity bucket: Critical / Watch / Info / Quiet.",
+                        "cellDataType": "text"
+                    },
+                    {
+                        "field": "score",
+                        "headerName": "Score",
+                        "headerTooltip": "Highest alert score for the day.",
+                        "cellDataType": "number",
+                        "formatterFn": "int"
+                    },
+                    {
+                        "field": "summary_preview",
+                        "headerName": "Today's Brief",
+                        "headerTooltip": "Preview of the AI-generated daily intelligence brief.",
+                        "cellDataType": "text"
+                    }
+                ]
+            }
+        },
+        "source": [
+            "Outsampler"
+        ]
+    },
+    "outsampler_portfolio_alerts_custom_obb": {
+        "name": "Portfolio Alerts Feed",
+        "description": "Unified, cross-asset alerts feed for a given date. Merges per-ticker alerts across the entire watchlist into a single newsfeed sorted by publication time, with each title prefixed by its ticker.",
+        "category": "Outsampler",
+        "type": "newsfeed",
+        "widgetId": "outsampler_portfolio_alerts_custom_obb",
+        "mcp_tool": {},
+        "params": [
+            {
+                "label": "Date",
+                "description": "The date for which to retrieve alerts.",
+                "optional": false,
+                "type": "date",
+                "value": "$currentDate-1d",
+                "show": true,
+                "paramName": "date"
+            }
+        ],
+        "endpoint": "/outsampler_portfolio_alerts",
+        "runButton": false,
+        "gridData": {
+            "w": 40,
+            "h": 18
+        },
+        "data": {
+            "dataKey": "",
+            "table": {
+                "showAll": true,
+                "columnsDefs": [
+                    {
+                        "field": "title",
+                        "headerName": "Title",
+                        "headerTooltip": "Headline of the alert, prefixed with [TICKER].",
+                        "cellDataType": "text"
+                    },
+                    {
+                        "field": "date",
+                        "pinned": "left",
+                        "headerName": "Date",
+                        "headerTooltip": "Publication date of the alert.",
+                        "cellDataType": "text"
+                    },
+                    {
+                        "field": "author",
+                        "headerName": "Author",
+                        "headerTooltip": "Article author or provider name.",
+                        "cellDataType": "text"
+                    },
+                    {
+                        "field": "excerpt",
+                        "headerName": "Excerpt",
+                        "headerTooltip": "AI-generated impact statement for the primary asset.",
+                        "cellDataType": "text"
+                    },
+                    {
+                        "field": "body",
+                        "headerName": "Body",
+                        "headerTooltip": "Full markdown-formatted alert detail.",
+                        "cellDataType": "text"
+                    }
+                ]
+            }
+        },
+        "source": [
+            "Outsampler"
+        ]
+    },
     "outsampler_brief_custom_obb": {
         "name": "Asset Intelligence",
         "description": "A combined markdown snapshot of the intelligence brief, key driver relationships, and top WATCH/CRITICAL alerts for a ticker on a given date.",
