@@ -52,11 +52,12 @@
                         "i": "outsampler_summary_custom_obb",
                         "x": 0,
                         "y": 13,
-                        "w": 40,
-                        "h": 8,
+                        "w": 19,
+                        "h": 15,
                         "state": {
                             "params": {
-                                "ticker": "ORCL"
+                                "ticker": "ORCL",
+                                "date": "2026-04-24"
                             }
                         },
                         "groups": [
@@ -66,13 +67,14 @@
                     },
                     {
                         "i": "outsampler_alerts_custom_obb",
-                        "x": 0,
-                        "y": 21,
-                        "w": 40,
-                        "h": 4,
+                        "x": 19,
+                        "y": 13,
+                        "w": 21,
+                        "h": 15,
                         "state": {
                             "params": {
-                                "ticker": "ORCL"
+                                "ticker": "ORCL",
+                                "date": "2026-04-24"
                             }
                         },
                         "groups": [
@@ -83,16 +85,65 @@
                     {
                         "i": "outsampler_brief_custom_obb",
                         "x": 0,
-                        "y": 25,
+                        "y": 28,
                         "w": 40,
                         "h": 20,
                         "state": {
                             "params": {
-                                "ticker": "ORCL"
+                                "ticker": "ORCL",
+                                "date": "2026-04-26"
                             }
                         },
                         "groups": [
                             "Group 1",
+                            "Group 2"
+                        ]
+                    },
+                    {
+                        "i": "outsampler_portfolio_snapshot_custom_obb",
+                        "x": 0,
+                        "y": 48,
+                        "w": 40,
+                        "h": 12,
+                        "state": {
+                            "params": {
+                                "date": "2026-04-24"
+                            },
+                            "chartView": {
+                                "enabled": false,
+                                "chartType": "line"
+                            },
+                            "columnState": {
+                                "default": {
+                                    "columnOrder": {
+                                        "orderedColIds": [
+                                            "ticker",
+                                            "name",
+                                            "sector",
+                                            "severity",
+                                            "score",
+                                            "summary_preview"
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        "groups": [
+                            "Group 2"
+                        ]
+                    },
+                    {
+                        "i": "outsampler_portfolio_alerts_custom_obb",
+                        "x": 0,
+                        "y": 60,
+                        "w": 40,
+                        "h": 18,
+                        "state": {
+                            "params": {
+                                "date": "2026-04-26"
+                            }
+                        },
+                        "groups": [
                             "Group 2"
                         ]
                     }
@@ -110,7 +161,7 @@
                 "name": "Group 2",
                 "type": "param",
                 "paramName": "date",
-                "defaultValue": "$currentDate-1d"
+                "defaultValue": "2026-04-24"
             }
         ]
     }
