@@ -1,9 +1,9 @@
 [
     {
         "name": "Outsampler Intelligence",
-        "img": "https://static.thenounproject.com/png/5202277-200.png",
-        "img_dark": "https://static.thenounproject.com/png/5202277-200.png",
-        "img_light": "https://static.thenounproject.com/png/5202277-200.png",
+        "img": "",
+        "img_dark": "",
+        "img_light": "",
         "description": "Outsampler is an AI-powered market intelligence platform that monitors news, press releases, and SEC filings for tracked assets, scores them for materiality, and surfaces the most relevant signals to investors.",
         "allowCustomization": true,
         "tabs": {
@@ -20,9 +20,19 @@
                         "groups": []
                     },
                     {
-                        "i": "outsampler_watchlist_custom_obb",
+                        "i": "outsampler_portfolio_kpis_custom_obb",
                         "x": 0,
                         "y": 5,
+                        "w": 40,
+                        "h": 5,
+                        "groups": [
+                            "Group 2"
+                        ]
+                    },
+                    {
+                        "i": "outsampler_watchlist_custom_obb",
+                        "x": 0,
+                        "y": 10,
                         "w": 40,
                         "h": 8,
                         "state": {
@@ -51,7 +61,7 @@
                     {
                         "i": "outsampler_summary_custom_obb",
                         "x": 0,
-                        "y": 13,
+                        "y": 18,
                         "w": 19,
                         "h": 15,
                         "state": {
@@ -68,7 +78,7 @@
                     {
                         "i": "outsampler_alerts_custom_obb",
                         "x": 19,
-                        "y": 13,
+                        "y": 18,
                         "w": 21,
                         "h": 15,
                         "state": {
@@ -85,7 +95,7 @@
                     {
                         "i": "outsampler_brief_custom_obb",
                         "x": 0,
-                        "y": 28,
+                        "y": 33,
                         "w": 40,
                         "h": 20,
                         "state": {
@@ -102,7 +112,7 @@
                     {
                         "i": "outsampler_portfolio_snapshot_custom_obb",
                         "x": 0,
-                        "y": 48,
+                        "y": 53,
                         "w": 40,
                         "h": 12,
                         "state": {
@@ -129,13 +139,76 @@
                             }
                         },
                         "groups": [
+                            "Group 1",
+                            "Group 2"
+                        ]
+                    },
+                    {
+                        "i": "outsampler_severity_distribution_custom_obb",
+                        "x": 0,
+                        "y": 65,
+                        "w": 20,
+                        "h": 12,
+                        "state": {
+                            "params": {
+                                "date": "2026-04-24"
+                            },
+                            "chartView": {
+                                "enabled": true,
+                                "chartType": "bar"
+                            },
+                            "chartModel": {
+                                "modelType": "range",
+                                "chartType": "bar",
+                                "chartOptions": {},
+                                "cellRange": {
+                                    "columns": [
+                                        "severity",
+                                        "count"
+                                    ]
+                                },
+                                "suppressChartRanges": true
+                            }
+                        },
+                        "groups": [
+                            "Group 2"
+                        ]
+                    },
+                    {
+                        "i": "outsampler_source_mix_custom_obb",
+                        "x": 20,
+                        "y": 65,
+                        "w": 20,
+                        "h": 12,
+                        "state": {
+                            "params": {
+                                "date": "2026-04-24"
+                            },
+                            "chartView": {
+                                "enabled": true,
+                                "chartType": "donut"
+                            },
+                            "chartModel": {
+                                "modelType": "range",
+                                "chartType": "donut",
+                                "chartOptions": {},
+                                "cellRange": {
+                                    "columns": [
+                                        "source",
+                                        "count"
+                                    ]
+                                },
+                                "suppressChartRanges": true
+                            }
+                        },
+                        "groups": [
                             "Group 2"
                         ]
                     },
                     {
                         "i": "outsampler_portfolio_alerts_custom_obb",
                         "x": 0,
-                        "y": 60,
+                        "y": 77,
                         "w": 40,
                         "h": 18,
                         "state": {
@@ -163,6 +236,7 @@
                 "paramName": "date",
                 "defaultValue": "2026-04-24"
             }
-        ]
+        ],
+        "prompts": []
     }
 ]

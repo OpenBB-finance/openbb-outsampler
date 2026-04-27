@@ -1,5 +1,8 @@
 import asyncio
 import json
+import re
+from collections import Counter
+from datetime import datetime, timezone
 from pathlib import Path
 
 import httpx
@@ -19,8 +22,21 @@ cors_origins = [
     "https://app.outsampler.com",
     "https://pro.openbb.co",
     "https://pro.openbb.dev",
-    "http://localhost",
+    "http://localhost:1420",
+    "http://localhost:6775",
 ]
+
+# Past-date results from /summaries and /alerts/feed are immutable (briefs are
+# generated once at 04:00 UTC; alerts for past days don't change). A simple
+# in-memory cache avoids hammering upstream when the dashboard re-fires the
+# same fan-out for prior dates. Today's date is always re-fetched.
+_UPSTREAM_CACHE: dict[tuple[str, str, str], object] = {}
+
+
+def _is_immutable_date(date_str: str) -> bool:
+    """True if the date is strictly before today (UTC) — safe to cache."""
+    today = datetime.now(timezone.utc).date().isoformat()
+    return bool(date_str) and date_str < today
 
 
 tickerParam = Annotated[
@@ -75,18 +91,59 @@ class PortfolioSnapshotItem(BaseModel):
     )
 
 
+class MetricItem(BaseModel):
+    label: str = Field(description="KPI label.")
+    value: str = Field(description="KPI value, formatted as a string.")
+    subvalue: str | None = Field(
+        default=None, description="Optional sub-value or context line."
+    )
+
+
+class SeverityCount(BaseModel):
+    severity: str = Field(description="Severity bucket label.")
+    count: int = Field(description="Number of assets in this bucket on the date.")
+
+
+class SourceCount(BaseModel):
+    source: str = Field(description="Source provider label, e.g. BENZINGA NEWS.")
+    count: int = Field(description="Number of alerts from this source on the date.")
+
+
+SEVERITY_LABELS = {
+    "Critical": "🔴 Critical",
+    "Watch": "🟡 Watch",
+    "Info": "🔵 Info",
+    "Quiet": "⚫ Quiet",
+}
+SEVERITY_ORDER = ["Critical", "Watch", "Info", "Quiet"]
+
+
 def _severity_from_score(score: float | None) -> str:
-    """Map a 0-1 (or 0-100) score to a severity bucket per Outsampler thresholds."""
+    """Map a 0-1 (or 0-100) score to a severity bucket per Outsampler thresholds.
+
+    Embeds a colored dot in the label so OpenBB tables render the severity
+    visually without depending on a renderFn. Live API has been observed to
+    return scores on a 0-100 scale despite the README spec of 0-1, so we
+    auto-normalize.
+    """
     if score is None or score <= 0:
-        return "Quiet"
+        return SEVERITY_LABELS["Quiet"]
     s = score / 100 if score > 1.0 else score
     if s >= 0.80:
-        return "Critical"
+        return SEVERITY_LABELS["Critical"]
     if s >= 0.60:
-        return "Watch"
+        return SEVERITY_LABELS["Watch"]
     if s >= 0.40:
-        return "Info"
-    return "Quiet"
+        return SEVERITY_LABELS["Info"]
+    return SEVERITY_LABELS["Quiet"]
+
+
+def _bare_severity(label: str) -> str:
+    """Strip the emoji prefix from a severity label."""
+    for key, value in SEVERITY_LABELS.items():
+        if label == value:
+            return key
+    return label
 
 
 def _summary_preview(text: str | None, limit: int = 220) -> str:
@@ -105,6 +162,17 @@ app.add_middleware(
     allow_headers=["*"],
     allow_credentials=True,
 )
+
+
+@app.exception_handler(httpx.HTTPStatusError)
+async def upstream_status_error(request: Request, exc: httpx.HTTPStatusError):
+    """Surface upstream Outsampler errors with their original status and body
+    instead of collapsing everything into a generic 500."""
+    detail = exc.response.text or str(exc)
+    return JSONResponse(
+        status_code=exc.response.status_code,
+        content={"detail": detail, "upstream": str(exc.request.url)},
+    )
 
 
 @app.get("/health")
@@ -315,29 +383,51 @@ async def _fetch_watchlist(client: httpx.AsyncClient) -> list[dict]:
 async def _fetch_summary_for(
     client: httpx.AsyncClient, ticker: str, date: str
 ) -> dict:
+    cache_key = ("summary", ticker, date)
+    if _is_immutable_date(date) and cache_key in _UPSTREAM_CACHE:
+        return _UPSTREAM_CACHE[cache_key]
     try:
         resp = await client.get(
             f"{base_url}/summaries", params={"ticker": ticker, "date": date}
         )
         resp.raise_for_status()
-        return resp.json() or {}
+        data = resp.json() or {}
     except Exception as exc:  # noqa: BLE001 - per-ticker isolation; surface via empty payload
         print(f"[portfolio_snapshot] {ticker} {date} failed: {exc}")
         return {"status": "error", "summary": None, "score": 0.0}
+    if _is_immutable_date(date):
+        _UPSTREAM_CACHE[cache_key] = data
+    return data
 
 
 async def _fetch_alerts_for(
     client: httpx.AsyncClient, ticker: str, date: str
 ) -> list[dict]:
+    cache_key = ("alerts", ticker, date)
+    if _is_immutable_date(date) and cache_key in _UPSTREAM_CACHE:
+        return _UPSTREAM_CACHE[cache_key]
     try:
         resp = await client.get(
             f"{base_url}/alerts/feed", params={"ticker": ticker, "date": date}
         )
         resp.raise_for_status()
-        return resp.json() or []
+        data = resp.json() or []
     except Exception as exc:  # noqa: BLE001
         print(f"[portfolio_alerts] {ticker} {date} failed: {exc}")
         return []
+    if _is_immutable_date(date):
+        _UPSTREAM_CACHE[cache_key] = data
+    return data
+
+
+_SOURCE_RE = re.compile(r"\*\*Source:\*\*\s*\[([^\]]+)\]")
+
+
+def _extract_source(alert: dict) -> str:
+    """Pull a normalized source label like 'BENZINGA NEWS' out of an alert body."""
+    body = alert.get("body") or ""
+    m = _SOURCE_RE.search(body)
+    return m.group(1).strip().upper() if m else "UNKNOWN"
 
 
 @app.get(
@@ -427,3 +517,151 @@ async def outsampler_portfolio_alerts(
 
     merged.sort(key=lambda a: a.get("date", ""), reverse=True)
     return merged
+
+
+@app.get(
+    "/outsampler_portfolio_kpis",
+    response_model=list[MetricItem],
+    openapi_extra={
+        "widget_config": {
+            "name": "Portfolio KPIs",
+            "type": "metric",
+            "gridData": {"w": 40, "h": 5},
+            "source": ["Outsampler"],
+            "category": "Outsampler",
+            "mcp_tool": {},
+        }
+    },
+)
+async def outsampler_portfolio_kpis(
+    request: Request, date: dateParam
+) -> list[MetricItem]:
+    """
+    Header-strip KPIs for a given date — Total Tracked, Critical / Watch / Info
+    counts across the watchlist, and the highest single-asset score. Mirrors the
+    severity counter pills from the Outsampler Updates page.
+    """
+    headers = {"X-API-Key": request.state.api_key}
+    async with httpx.AsyncClient(timeout=60, headers=headers) as http:
+        watchlist = await _fetch_watchlist(http)
+        summaries = await asyncio.gather(
+            *(_fetch_summary_for(http, item["ticker"], date) for item in watchlist)
+        )
+
+    bucket_counts = Counter()
+    top_score = 0.0
+    top_ticker = ""
+    for asset, summary in zip(watchlist, summaries):
+        raw = float(summary.get("score") or 0.0)
+        bucket = _bare_severity(_severity_from_score(raw))
+        bucket_counts[bucket] += 1
+        if raw > top_score:
+            top_score = raw
+            top_ticker = asset.get("ticker", "")
+
+    return [
+        MetricItem(label="Tracked Assets", value=str(len(watchlist))),
+        MetricItem(
+            label="🔴 Critical",
+            value=str(bucket_counts.get("Critical", 0)),
+            subvalue="score ≥ 0.80",
+        ),
+        MetricItem(
+            label="🟡 Watch",
+            value=str(bucket_counts.get("Watch", 0)),
+            subvalue="0.60 – 0.79",
+        ),
+        MetricItem(
+            label="🔵 Info",
+            value=str(bucket_counts.get("Info", 0)),
+            subvalue="0.40 – 0.59",
+        ),
+        MetricItem(
+            label="Top Score",
+            value=f"{top_score:.1f}" if top_score else "—",
+            subvalue=top_ticker or "no signal",
+        ),
+    ]
+
+
+@app.get(
+    "/outsampler_severity_distribution",
+    response_model=list[SeverityCount],
+    openapi_extra={
+        "widget_config": {
+            "name": "Severity Distribution",
+            "type": "table",
+            "gridData": {"w": 20, "h": 12},
+            "source": ["Outsampler"],
+            "category": "Outsampler",
+            "mcp_tool": {},
+        }
+    },
+)
+async def outsampler_severity_distribution(
+    request: Request, date: dateParam
+) -> list[SeverityCount]:
+    """
+    Count of watchlist assets in each severity bucket for a given date.
+    Designed to render as an AG Grid bar chart via apps.json `chartView`.
+    Always emits all four buckets so the chart axes stay stable.
+    """
+    headers = {"X-API-Key": request.state.api_key}
+    async with httpx.AsyncClient(timeout=60, headers=headers) as http:
+        watchlist = await _fetch_watchlist(http)
+        summaries = await asyncio.gather(
+            *(_fetch_summary_for(http, item["ticker"], date) for item in watchlist)
+        )
+
+    counts = Counter()
+    for summary in summaries:
+        bucket = _bare_severity(
+            _severity_from_score(float(summary.get("score") or 0.0))
+        )
+        counts[bucket] += 1
+
+    return [
+        SeverityCount(severity=SEVERITY_LABELS[b], count=counts.get(b, 0))
+        for b in SEVERITY_ORDER
+    ]
+
+
+@app.get(
+    "/outsampler_source_mix",
+    response_model=list[SourceCount],
+    openapi_extra={
+        "widget_config": {
+            "name": "Source Mix",
+            "type": "table",
+            "gridData": {"w": 20, "h": 12},
+            "source": ["Outsampler"],
+            "category": "Outsampler",
+            "mcp_tool": {},
+        }
+    },
+)
+async def outsampler_source_mix(
+    request: Request, date: dateParam
+) -> list[SourceCount]:
+    """
+    Count of alerts grouped by source provider (BENZINGA NEWS, BENZINGA PR,
+    SEC etc.) across the entire watchlist for a given date. Designed to render
+    as an AG Grid donut/pie chart via apps.json `chartView`. Mirrors the
+    Filings / Press / News filter on the Outsampler Updates page.
+    """
+    headers = {"X-API-Key": request.state.api_key}
+    async with httpx.AsyncClient(timeout=60, headers=headers) as http:
+        watchlist = await _fetch_watchlist(http)
+        per_ticker = await asyncio.gather(
+            *(_fetch_alerts_for(http, item["ticker"], date) for item in watchlist)
+        )
+
+    counts: Counter[str] = Counter()
+    for alerts in per_ticker:
+        for alert in alerts:
+            counts[_extract_source(alert)] += 1
+
+    return [
+        SourceCount(source=src, count=n)
+        for src, n in counts.most_common()
+    ]

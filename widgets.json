@@ -226,6 +226,135 @@
             "Outsampler"
         ]
     },
+    "outsampler_portfolio_kpis_custom_obb": {
+        "name": "Portfolio KPIs",
+        "description": "Header-strip KPI metrics for a given date — total tracked assets, severity bucket counts (Critical / Watch / Info), and the highest single-asset score with the leading ticker.",
+        "category": "Outsampler",
+        "type": "metric",
+        "widgetId": "outsampler_portfolio_kpis_custom_obb",
+        "mcp_tool": {},
+        "params": [
+            {
+                "label": "Date",
+                "description": "The date for which to compute portfolio KPIs.",
+                "optional": false,
+                "type": "date",
+                "value": "$currentDate-1d",
+                "show": true,
+                "paramName": "date"
+            }
+        ],
+        "endpoint": "/outsampler_portfolio_kpis",
+        "runButton": false,
+        "gridData": {
+            "w": 40,
+            "h": 5
+        },
+        "data": {
+            "dataKey": ""
+        },
+        "source": [
+            "Outsampler"
+        ]
+    },
+    "outsampler_severity_distribution_custom_obb": {
+        "name": "Severity Distribution",
+        "description": "Count of watchlist assets in each severity bucket (Critical / Watch / Info / Quiet) for a given date. Best rendered as a bar chart via the chart view.",
+        "category": "Outsampler",
+        "type": "table",
+        "widgetId": "outsampler_severity_distribution_custom_obb",
+        "mcp_tool": {},
+        "params": [
+            {
+                "label": "Date",
+                "description": "The date for which to compute the severity distribution.",
+                "optional": false,
+                "type": "date",
+                "value": "$currentDate-1d",
+                "show": true,
+                "paramName": "date"
+            }
+        ],
+        "endpoint": "/outsampler_severity_distribution",
+        "runButton": false,
+        "gridData": {
+            "w": 20,
+            "h": 12
+        },
+        "data": {
+            "dataKey": "",
+            "table": {
+                "showAll": true,
+                "columnsDefs": [
+                    {
+                        "field": "severity",
+                        "headerName": "Severity",
+                        "headerTooltip": "Severity bucket.",
+                        "cellDataType": "text"
+                    },
+                    {
+                        "field": "count",
+                        "headerName": "Assets",
+                        "headerTooltip": "Number of assets in this bucket.",
+                        "cellDataType": "number",
+                        "formatterFn": "int"
+                    }
+                ]
+            }
+        },
+        "source": [
+            "Outsampler"
+        ]
+    },
+    "outsampler_source_mix_custom_obb": {
+        "name": "Source Mix",
+        "description": "Count of alerts grouped by source provider (BENZINGA NEWS, BENZINGA PR, SEC, etc.) across the entire watchlist for a given date. Best rendered as a donut chart via the chart view.",
+        "category": "Outsampler",
+        "type": "table",
+        "widgetId": "outsampler_source_mix_custom_obb",
+        "mcp_tool": {},
+        "params": [
+            {
+                "label": "Date",
+                "description": "The date for which to compute the source mix.",
+                "optional": false,
+                "type": "date",
+                "value": "$currentDate-1d",
+                "show": true,
+                "paramName": "date"
+            }
+        ],
+        "endpoint": "/outsampler_source_mix",
+        "runButton": false,
+        "gridData": {
+            "w": 20,
+            "h": 12
+        },
+        "data": {
+            "dataKey": "",
+            "table": {
+                "showAll": true,
+                "columnsDefs": [
+                    {
+                        "field": "source",
+                        "headerName": "Source",
+                        "headerTooltip": "Source provider.",
+                        "cellDataType": "text"
+                    },
+                    {
+                        "field": "count",
+                        "headerName": "Alerts",
+                        "headerTooltip": "Number of alerts from this source.",
+                        "cellDataType": "number",
+                        "formatterFn": "int"
+                    }
+                ]
+            }
+        },
+        "source": [
+            "Outsampler"
+        ]
+    },
     "outsampler_portfolio_snapshot_custom_obb": {
         "name": "Portfolio Severity Snapshot",
         "description": "Cross-section severity snapshot across the entire watchlist for a given date. Mirrors the Outsampler Daily Summaries page — one row per tracked asset, sorted by score descending.",
@@ -291,7 +420,8 @@
                         "field": "score",
                         "headerName": "Score",
                         "headerTooltip": "Highest alert score for the day.",
-                        "cellDataType": "number"
+                        "cellDataType": "number",
+                        "formatterFn": "int"
                     },
                     {
                         "field": "summary_preview",
