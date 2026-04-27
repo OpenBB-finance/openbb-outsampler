@@ -118,26 +118,6 @@ SEVERITY_LABELS = {
 SEVERITY_ORDER = ["Critical", "Watch", "Info", "Quiet"]
 
 
-def _severity_from_score(score: float | None) -> str:
-    """Map a 0-1 (or 0-100) score to a severity bucket per Outsampler thresholds.
-
-    Embeds a colored dot in the label so OpenBB tables render the severity
-    visually without depending on a renderFn. Live API has been observed to
-    return scores on a 0-100 scale despite the README spec of 0-1, so we
-    auto-normalize.
-    """
-    if score is None or score <= 0:
-        return SEVERITY_LABELS["Quiet"]
-    s = score / 100 if score > 1.0 else score
-    if s >= 0.80:
-        return SEVERITY_LABELS["Critical"]
-    if s >= 0.60:
-        return SEVERITY_LABELS["Watch"]
-    if s >= 0.40:
-        return SEVERITY_LABELS["Info"]
-    return SEVERITY_LABELS["Quiet"]
-
-
 def _bare_severity(label: str) -> str:
     """Strip the emoji prefix from a severity label."""
     for key, value in SEVERITY_LABELS.items():
@@ -430,6 +410,47 @@ def _extract_source(alert: dict) -> str:
     return m.group(1).strip().upper() if m else "UNKNOWN"
 
 
+# The upstream daily severity emoji ("🔴 Critical" etc.) is rendered by
+# /summaries/markdown using internal logic that doesn't line up with the
+# numeric `score` field on a 0-100 scale (observed: score 48.2 → markdown
+# Critical). To stay consistent with what the user sees in the markdown
+# widget, we parse severity directly from the markdown response rather than
+# bucketing the numeric score.
+_SEVERITY_EMOJI = (
+    ("🔴", "Critical"),
+    ("🟡", "Watch"),
+    ("🔵", "Info"),
+    ("⚫", "Quiet"),
+)
+
+
+async def _fetch_severity_for(
+    client: httpx.AsyncClient, ticker: str, date: str
+) -> str:
+    """Severity bucket as the upstream daily-summary markdown labels it."""
+    cache_key = ("severity_md", ticker, date)
+    if _is_immutable_date(date) and cache_key in _UPSTREAM_CACHE:
+        return _UPSTREAM_CACHE[cache_key]
+    try:
+        resp = await client.get(
+            f"{base_url}/summaries/markdown",
+            params={"ticker": ticker, "date": date},
+        )
+        resp.raise_for_status()
+        md = resp.text or ""
+    except Exception as exc:  # noqa: BLE001
+        print(f"[severity] {ticker} {date} failed: {exc}")
+        return "Quiet"
+    bucket = "Quiet"
+    for emoji, label in _SEVERITY_EMOJI:
+        if emoji in md:
+            bucket = label
+            break
+    if _is_immutable_date(date):
+        _UPSTREAM_CACHE[cache_key] = bucket
+    return bucket
+
+
 @app.get(
     "/outsampler_portfolio_snapshot",
     response_model=list[PortfolioSnapshotItem],
@@ -456,25 +477,30 @@ async def outsampler_portfolio_snapshot(
     headers = {"X-API-Key": request.state.api_key}
     async with httpx.AsyncClient(timeout=60, headers=headers) as http:
         watchlist = await _fetch_watchlist(http)
-        summaries = await asyncio.gather(
-            *(_fetch_summary_for(http, item["ticker"], date) for item in watchlist)
+        summaries, severities = await asyncio.gather(
+            asyncio.gather(
+                *(_fetch_summary_for(http, item["ticker"], date) for item in watchlist)
+            ),
+            asyncio.gather(
+                *(_fetch_severity_for(http, item["ticker"], date) for item in watchlist)
+            ),
         )
 
     rows: list[PortfolioSnapshotItem] = []
-    for asset, summary in zip(watchlist, summaries):
+    for asset, summary, severity in zip(watchlist, summaries, severities):
         score = float(summary.get("score") or 0.0)
         rows.append(
             PortfolioSnapshotItem(
                 ticker=asset.get("ticker", ""),
                 name=asset.get("name", ""),
                 sector=asset.get("sector", ""),
-                severity=_severity_from_score(score),
+                severity=SEVERITY_LABELS.get(severity, SEVERITY_LABELS["Quiet"]),
                 score=score,
                 summary_preview=_summary_preview(summary.get("summary")),
             )
         )
 
-    rows.sort(key=lambda r: r.score, reverse=True)
+    rows.sort(key=lambda r: (SEVERITY_ORDER.index(_bare_severity(r.severity)), -r.score))
     return rows
 
 
@@ -544,17 +570,21 @@ async def outsampler_portfolio_kpis(
     headers = {"X-API-Key": request.state.api_key}
     async with httpx.AsyncClient(timeout=60, headers=headers) as http:
         watchlist = await _fetch_watchlist(http)
-        summaries = await asyncio.gather(
-            *(_fetch_summary_for(http, item["ticker"], date) for item in watchlist)
+        summaries, severities = await asyncio.gather(
+            asyncio.gather(
+                *(_fetch_summary_for(http, item["ticker"], date) for item in watchlist)
+            ),
+            asyncio.gather(
+                *(_fetch_severity_for(http, item["ticker"], date) for item in watchlist)
+            ),
         )
 
     bucket_counts = Counter()
     top_score = 0.0
     top_ticker = ""
-    for asset, summary in zip(watchlist, summaries):
+    for asset, summary, severity in zip(watchlist, summaries, severities):
         raw = float(summary.get("score") or 0.0)
-        bucket = _bare_severity(_severity_from_score(raw))
-        bucket_counts[bucket] += 1
+        bucket_counts[severity] += 1
         if raw > top_score:
             top_score = raw
             top_ticker = asset.get("ticker", "")
@@ -564,17 +594,17 @@ async def outsampler_portfolio_kpis(
         MetricItem(
             label="🔴 Critical",
             value=str(bucket_counts.get("Critical", 0)),
-            subvalue="score ≥ 0.80",
+            subvalue="high-impact",
         ),
         MetricItem(
             label="🟡 Watch",
             value=str(bucket_counts.get("Watch", 0)),
-            subvalue="0.60 – 0.79",
+            subvalue="notable",
         ),
         MetricItem(
             label="🔵 Info",
             value=str(bucket_counts.get("Info", 0)),
-            subvalue="0.40 – 0.59",
+            subvalue="informational",
         ),
         MetricItem(
             label="Top Score",
@@ -609,16 +639,11 @@ async def outsampler_severity_distribution(
     headers = {"X-API-Key": request.state.api_key}
     async with httpx.AsyncClient(timeout=60, headers=headers) as http:
         watchlist = await _fetch_watchlist(http)
-        summaries = await asyncio.gather(
-            *(_fetch_summary_for(http, item["ticker"], date) for item in watchlist)
+        severities = await asyncio.gather(
+            *(_fetch_severity_for(http, item["ticker"], date) for item in watchlist)
         )
 
-    counts = Counter()
-    for summary in summaries:
-        bucket = _bare_severity(
-            _severity_from_score(float(summary.get("score") or 0.0))
-        )
-        counts[bucket] += 1
+    counts = Counter(severities)
 
     return [
         SeverityCount(severity=SEVERITY_LABELS[b], count=counts.get(b, 0))
